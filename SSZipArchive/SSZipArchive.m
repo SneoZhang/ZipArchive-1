@@ -48,7 +48,7 @@ BOOL _fileIsSymbolicLink(const unz_file_info *fileInfo);
 
 + (BOOL)isFilePasswordProtectedAtPath:(NSString *)path {
     // Begin opening
-    zipFile zip = unzOpen(path.fileSystemRepresentation);
+    zipFile zip = unzOpen1(path.fileSystemRepresentation);
     if (zip == NULL) {
         return NO;
     }
@@ -90,7 +90,7 @@ BOOL _fileIsSymbolicLink(const unz_file_info *fileInfo);
         *error = nil;
     }
 
-    zipFile zip = unzOpen(path.fileSystemRepresentation);
+    zipFile zip = unzOpen1(path.fileSystemRepresentation);
     if (zip == NULL) {
         if (error) {
             *error = [NSError errorWithDomain:SSZipArchiveErrorDomain
@@ -165,7 +165,7 @@ BOOL _fileIsSymbolicLink(const unz_file_info *fileInfo);
         *error = nil;
     }
 
-    zipFile zip = unzOpen(path.fileSystemRepresentation);
+    zipFile zip = unzOpen1(path.fileSystemRepresentation);
     if (zip == NULL) {
         if (error) {
             *error = [NSError errorWithDomain:SSZipArchiveErrorDomain
@@ -308,7 +308,7 @@ BOOL _fileIsSymbolicLink(const unz_file_info *fileInfo);
     }
     
     // Begin opening
-    zipFile zip = unzOpen(path.fileSystemRepresentation);
+    zipFile zip = unzOpen1(path.fileSystemRepresentation);
     if (zip == NULL)
     {
         NSDictionary *userInfo = @{NSLocalizedDescriptionKey: @"failed to open zip file"};

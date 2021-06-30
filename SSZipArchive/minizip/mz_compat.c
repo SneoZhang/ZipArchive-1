@@ -301,7 +301,7 @@ void* zipGetStream(zipFile file)
 
 /***************************************************************************/
 
-unzFile unzOpen(const char *path)
+unzFile unzOpen1(const char *path)
 {
     return unzOpen64(path);
 }

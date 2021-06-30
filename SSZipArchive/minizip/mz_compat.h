@@ -164,7 +164,7 @@ typedef int (*unzIteratorFunction2)(unzFile file, unz_file_info64 *pfile_info, c
 /***************************************************************************/
 /* Reading a zip file */
 
-ZEXPORT unzFile unzOpen(const char *path);
+ZEXPORT unzFile unzOpen1(const char *path);
 ZEXPORT unzFile unzOpen64(const void *path);
 ZEXPORT unzFile unzOpen2(const char *path, zlib_filefunc_def *pzlib_filefunc_def);
 ZEXPORT unzFile unzOpen2_64(const void *path, zlib_filefunc64_def *pzlib_filefunc_def);
