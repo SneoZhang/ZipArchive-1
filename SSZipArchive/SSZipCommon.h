@@ -5,23 +5,23 @@
 
 /* unz_global_info structure contain global data about the ZIPfile
  These data comes from the end of central dir */
-typedef struct unz_global_info64_s
+typedef struct ss_unz_global_info64_s
 {
     uint64_t number_entry;          /* total number of entries in the central dir on this disk */
     uint32_t number_disk_with_CD;   /* number the the disk with central dir, used for spanning ZIP */
     uint16_t size_comment;          /* size of the global comment of the zipfile */
-} unz_global_info64;
+} ss_unz_global_info64;
 
-typedef struct unz_global_info_s
+typedef struct ss_unz_global_info_s
 {
     uint32_t number_entry;          /* total number of entries in the central dir on this disk */
     uint32_t number_disk_with_CD;   /* number the the disk with central dir, used for spanning ZIP */
     uint16_t size_comment;          /* size of the global comment of the zipfile */
-} unz_global_info;
+} ss_unz_global_info;
 
 /* unz_file_info contain information about a file in the zipfile */
 /* https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT */
-typedef struct unz_file_info64_s
+typedef struct ss_unz_file_info64_s
 {
     uint16_t version;               /* version made by                 2 bytes */
     uint16_t version_needed;        /* version needed to extract       2 bytes */
@@ -42,9 +42,9 @@ typedef struct unz_file_info64_s
     uint64_t disk_offset;
     
     uint16_t size_file_extra_internal;
-} unz_file_info64;
+} ss_unz_file_info64;
 
-typedef struct unz_file_info_s
+typedef struct ss_unz_file_info_s
 {
     uint16_t version;               /* version made by                 2 bytes */
     uint16_t version_needed;        /* version needed to extract       2 bytes */
@@ -63,6 +63,6 @@ typedef struct unz_file_info_s
     uint32_t external_fa;           /* external file attributes        4 bytes */
     
     uint64_t disk_offset;
-} unz_file_info;
+} ss_unz_file_info;
 
 #endif

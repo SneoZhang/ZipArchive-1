@@ -16,8 +16,8 @@ NSString *const SSZipArchiveErrorDomain = @"SSZipArchiveErrorDomain";
 
 #define CHUNK 16384
 
-int _zipOpenEntry(ss_zipFile entry, NSString *name, const zip_fileinfo *zipfi, int level, NSString *password, BOOL aes);
-BOOL _fileIsSymbolicLink(const unz_file_info *fileInfo);
+int _zipOpenEntry(ss_zipFile entry, NSString *name, const ss_zip_fileinfo *zipfi, int level, NSString *password, BOOL aes);
+BOOL _fileIsSymbolicLink(const ss_unz_file_info *fileInfo);
 
 #ifndef API_AVAILABLE
 // Xcode 7- compatibility
@@ -67,7 +67,7 @@ BOOL _fileIsSymbolicLink(const unz_file_info *fileInfo);
                 }
                 break;
             }
-            unz_file_info fileInfo = {};
+            ss_unz_file_info fileInfo = {};
             ret = ss_unzGetCurrentFileInfo(zip, &fileInfo, NULL, 0, NULL, 0, NULL, 0);
             ss_unzCloseCurrentFile(zip);
             if (ret != UNZ_OK) {
@@ -121,7 +121,7 @@ BOOL _fileIsSymbolicLink(const unz_file_info *fileInfo);
                 passwordValid = NO;
                 break;
             }
-            unz_file_info fileInfo = {};
+            ss_unz_file_info fileInfo = {};
             ret = ss_unzGetCurrentFileInfo(zip, &fileInfo, NULL, 0, NULL, 0, NULL, 0);
             if (ret != UNZ_OK) {
                 if (error) {
@@ -188,7 +188,7 @@ BOOL _fileIsSymbolicLink(const unz_file_info *fileInfo);
                 }
                 break;
             }
-            unz_file_info fileInfo = {};
+            ss_unz_file_info fileInfo = {};
             ret = ss_unzGetCurrentFileInfo(zip, &fileInfo, NULL, 0, NULL, 0, NULL, 0);
             if (ret != UNZ_OK) {
                 if (error) {
@@ -242,7 +242,7 @@ BOOL _fileIsSymbolicLink(const unz_file_info *fileInfo);
           toDestination:(NSString *)destination
               overwrite:(BOOL)overwrite
                password:(NSString *)password
-        progressHandler:(void (^)(NSString *entry, unz_file_info zipInfo, long entryNumber, long total))progressHandler
+        progressHandler:(void (^)(NSString *entry, ss_unz_file_info zipInfo, long entryNumber, long total))progressHandler
       completionHandler:(void (^)(NSString *path, BOOL succeeded, NSError * _Nullable error))completionHandler
 {
     return [self unzipFileAtPath:path toDestination:destination preserveAttributes:YES overwrite:overwrite password:password error:nil delegate:nil progressHandler:progressHandler completionHandler:completionHandler];
@@ -250,7 +250,7 @@ BOOL _fileIsSymbolicLink(const unz_file_info *fileInfo);
 
 + (BOOL)unzipFileAtPath:(NSString *)path
           toDestination:(NSString *)destination
-        progressHandler:(void (^_Nullable)(NSString *entry, unz_file_info zipInfo, long entryNumber, long total))progressHandler
+        progressHandler:(void (^_Nullable)(NSString *entry, ss_unz_file_info zipInfo, long entryNumber, long total))progressHandler
       completionHandler:(void (^_Nullable)(NSString *path, BOOL succeeded, NSError * _Nullable error))completionHandler
 {
     return [self unzipFileAtPath:path toDestination:destination preserveAttributes:YES overwrite:YES password:nil error:nil delegate:nil progressHandler:progressHandler completionHandler:completionHandler];
@@ -274,7 +274,7 @@ BOOL _fileIsSymbolicLink(const unz_file_info *fileInfo);
                password:(nullable NSString *)password
                   error:(NSError **)error
                delegate:(nullable id<SSZipArchiveDelegate>)delegate
-        progressHandler:(void (^_Nullable)(NSString *entry, unz_file_info zipInfo, long entryNumber, long total))progressHandler
+        progressHandler:(void (^_Nullable)(NSString *entry, ss_unz_file_info zipInfo, long entryNumber, long total))progressHandler
       completionHandler:(void (^_Nullable)(NSString *path, BOOL succeeded, NSError * _Nullable error))completionHandler
 {
     return [self unzipFileAtPath:path toDestination:destination preserveAttributes:preserveAttributes overwrite:overwrite nestedZipLevel:0 password:password error:error delegate:delegate progressHandler:progressHandler completionHandler:completionHandler];
@@ -288,7 +288,7 @@ BOOL _fileIsSymbolicLink(const unz_file_info *fileInfo);
                password:(nullable NSString *)password
                   error:(NSError **)error
                delegate:(nullable id<SSZipArchiveDelegate>)delegate
-        progressHandler:(void (^_Nullable)(NSString *entry, unz_file_info zipInfo, long entryNumber, long total))progressHandler
+        progressHandler:(void (^_Nullable)(NSString *entry, ss_unz_file_info zipInfo, long entryNumber, long total))progressHandler
       completionHandler:(void (^_Nullable)(NSString *path, BOOL succeeded, NSError * _Nullable error))completionHandler
 {
     // Guard against empty strings
@@ -328,7 +328,7 @@ BOOL _fileIsSymbolicLink(const unz_file_info *fileInfo);
     unsigned long long fileSize = [[fileAttributes objectForKey:NSFileSize] unsignedLongLongValue];
     unsigned long long currentPosition = 0;
     
-    unz_global_info globalInfo = {};
+    ss_unz_global_info globalInfo = {};
     ss_unzGetGlobalInfo(zip, &globalInfo);
     
     // Begin unzipping
@@ -386,8 +386,8 @@ BOOL _fileIsSymbolicLink(const unz_file_info *fileInfo);
             }
             
             // Reading data and write to file
-            unz_file_info fileInfo;
-            memset(&fileInfo, 0, sizeof(unz_file_info));
+            ss_unz_file_info fileInfo;
+            memset(&fileInfo, 0, sizeof(ss_unz_file_info));
             
             ret = ss_unzGetCurrentFileInfo(zip, &fileInfo, NULL, 0, NULL, 0, NULL, 0);
             if (ret != UNZ_OK) {
@@ -960,7 +960,7 @@ BOOL _fileIsSymbolicLink(const unz_file_info *fileInfo);
         fileName = path.lastPathComponent;
     }
     
-    zip_fileinfo zipInfo = {};    
+    ss_zip_fileinfo zipInfo = {};    
     [SSZipArchive zipInfo:&zipInfo setAttributesOfItemAtPath:path];
     
     //unpdate zipInfo.external_fa
@@ -1017,7 +1017,7 @@ BOOL _fileIsSymbolicLink(const unz_file_info *fileInfo);
 {
     NSAssert((_zip != NULL), @"Attempting to write to an archive which was never opened");
     
-    zip_fileinfo zipInfo = {};
+    ss_zip_fileinfo zipInfo = {};
     
     [SSZipArchive zipInfo:&zipInfo setAttributesOfItemAtPath:path];
     
@@ -1054,7 +1054,7 @@ BOOL _fileIsSymbolicLink(const unz_file_info *fileInfo);
         fileName = path.lastPathComponent;
     }
     
-    zip_fileinfo zipInfo = {};
+    ss_zip_fileinfo zipInfo = {};
     
     [SSZipArchive zipInfo:&zipInfo setAttributesOfItemAtPath:path];
     
@@ -1092,7 +1092,7 @@ BOOL _fileIsSymbolicLink(const unz_file_info *fileInfo);
     if (!data) {
         return NO;
     }
-    zip_fileinfo zipInfo = {};
+    ss_zip_fileinfo zipInfo = {};
     [SSZipArchive zipInfo:&zipInfo setDate:[NSDate date]];
     
     int error = _zipOpenEntry(_zip, filename, &zipInfo, compressionLevel, password, aes);
@@ -1184,7 +1184,7 @@ BOOL _fileIsSymbolicLink(const unz_file_info *fileInfo);
     return strPath;
 }
 
-+ (void)zipInfo:(zip_fileinfo *)zipInfo setAttributesOfItemAtPath:(NSString *)path
++ (void)zipInfo:(ss_zip_fileinfo *)zipInfo setAttributesOfItemAtPath:(NSString *)path
 {
     NSDictionary *attr = [[NSFileManager defaultManager] attributesOfItemAtPath:path error: nil];
     if (attr)
@@ -1216,7 +1216,7 @@ BOOL _fileIsSymbolicLink(const unz_file_info *fileInfo);
     }
 }
 
-+ (void)zipInfo:(zip_fileinfo *)zipInfo setDate:(NSDate *)date
++ (void)zipInfo:(ss_zip_fileinfo *)zipInfo setDate:(NSDate *)date
 {
     NSCalendar *currentCalendar = SSZipArchive._gregorian;
     NSCalendarUnit flags = NSCalendarUnitYear | NSCalendarUnitMonth | NSCalendarUnitDay | NSCalendarUnitHour | NSCalendarUnitMinute | NSCalendarUnitSecond;
@@ -1279,7 +1279,7 @@ BOOL _fileIsSymbolicLink(const unz_file_info *fileInfo);
 
 @end
 
-int _zipOpenEntry(ss_zipFile entry, NSString *name, const zip_fileinfo *zipfi, int level, NSString *password, BOOL aes)
+int _zipOpenEntry(ss_zipFile entry, NSString *name, const ss_zip_fileinfo *zipfi, int level, NSString *password, BOOL aes)
 {
     // https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT
     uint16_t made_on_darwin = 19 << 8;
@@ -1290,7 +1290,7 @@ int _zipOpenEntry(ss_zipFile entry, NSString *name, const zip_fileinfo *zipfi, i
 
 #pragma mark - Private tools for file info
 
-BOOL _fileIsSymbolicLink(const unz_file_info *fileInfo)
+BOOL _fileIsSymbolicLink(const ss_unz_file_info *fileInfo)
 {
     //
     // Determine whether this is a symbolic link:

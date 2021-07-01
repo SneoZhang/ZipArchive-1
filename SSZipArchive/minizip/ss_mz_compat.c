@@ -140,7 +140,7 @@ ss_zipFile ss_zipOpen_MZ(void *stream, int append, const char **globalcomment)
     return (ss_zipFile)compat;
 }
 
-int ss_zipOpenNewFileInZip5(ss_zipFile file, const char *filename, const zip_fileinfo *zipfi,
+int ss_zipOpenNewFileInZip5(ss_zipFile file, const char *filename, const ss_zip_fileinfo *zipfi,
     const void *extrafield_local, uint16_t size_extrafield_local, const void *extrafield_global,
     uint16_t size_extrafield_global, const char *comment, uint16_t compression_method, int level,
     int raw, int windowBits, int memLevel, int strategy, const char *password,
@@ -416,13 +416,13 @@ int ss_unzClose_MZ(ss_unzFile file)
     return err;
 }
 
-int ss_unzGetGlobalInfo(ss_unzFile file, unz_global_info* pglobal_info32)
+int ss_unzGetGlobalInfo(ss_unzFile file, ss_unz_global_info* pglobal_info32)
 {
     mz_compat *compat = (mz_compat *)file;
-    unz_global_info64 global_info64;
+    ss_unz_global_info64 global_info64;
     int32_t err = MZ_OK;
 
-    memset(pglobal_info32, 0, sizeof(unz_global_info));
+    memset(pglobal_info32, 0, sizeof(ss_unz_global_info));
     if (compat == NULL)
         return UNZ_PARAMERROR;
 
@@ -436,13 +436,13 @@ int ss_unzGetGlobalInfo(ss_unzFile file, unz_global_info* pglobal_info32)
     return err;
 }
 
-int ss_unzGetGlobalInfo64(ss_unzFile file, unz_global_info64 *pglobal_info)
+int ss_unzGetGlobalInfo64(ss_unzFile file, ss_unz_global_info64 *pglobal_info)
 {
     mz_compat *compat = (mz_compat *)file;
     const char *comment_ptr = NULL;
     int32_t err = MZ_OK;
 
-    memset(pglobal_info, 0, sizeof(unz_global_info64));
+    memset(pglobal_info, 0, sizeof(ss_unz_global_info64));
     if (compat == NULL)
         return UNZ_PARAMERROR;
     err = mz_zip_get_comment(compat->handle, &comment_ptr);
@@ -558,7 +558,7 @@ int ss_unzCloseCurrentFile(ss_unzFile file)
     return err;
 }
 
-int ss_unzGetCurrentFileInfo(ss_unzFile file, unz_file_info *pfile_info, char *filename,
+int ss_unzGetCurrentFileInfo(ss_unzFile file, ss_unz_file_info *pfile_info, char *filename,
     uint16_t filename_size, void *extrafield, uint16_t extrafield_size, char *comment, uint16_t comment_size)
 {
     mz_compat *compat = (mz_compat *)file;
@@ -622,7 +622,7 @@ int ss_unzGetCurrentFileInfo(ss_unzFile file, unz_file_info *pfile_info, char *f
     return err;
 }
 
-int ss_unzGetCurrentFileInfo64(ss_unzFile file, unz_file_info64 * pfile_info, char *filename,
+int ss_unzGetCurrentFileInfo64(ss_unzFile file, ss_unz_file_info64 * pfile_info, char *filename,
     uint16_t filename_size, void *extrafield, uint16_t extrafield_size, char *comment, uint16_t comment_size)
 {
     mz_compat *compat = (mz_compat *)file;

@@ -82,7 +82,7 @@ typedef struct
     struct tm   tmz_date;
     uint16_t    internal_fa;        /* internal file attributes        2 bytes */
     uint32_t    external_fa;        /* external file attributes        4 bytes */
-} zip_fileinfo;
+} ss_zip_fileinfo;
 
 /***************************************************************************/
 
@@ -110,7 +110,7 @@ ZEXPORT ss_zipFile ss_zipOpen2_64(const void *path, int append, const char **glo
     zlib_filefunc64_def *pzlib_filefunc_def);
         ss_zipFile ss_zipOpen_MZ(void *stream, int append, const char **globalcomment);
 
-ZEXPORT int     ss_zipOpenNewFileInZip5(ss_zipFile file, const char *filename, const zip_fileinfo *zipfi,
+ZEXPORT int     ss_zipOpenNewFileInZip5(ss_zipFile file, const char *filename, const ss_zip_fileinfo *zipfi,
     const void *extrafield_local, uint16_t size_extrafield_local, const void *extrafield_global,
     uint16_t size_extrafield_global, const char *comment, uint16_t compression_method, int level,
     int raw, int windowBits, int memLevel, int strategy, const char *password,
@@ -157,7 +157,7 @@ typedef void *ss_unzFile;
 
 typedef int (*ss_unzFileNameComparer)(ss_unzFile file, const char *filename1, const char *filename2);
 typedef int (*ss_unzIteratorFunction)(ss_unzFile file);
-typedef int (*ss_unzIteratorFunction2)(ss_unzFile file, unz_file_info64 *pfile_info, char *filename,
+typedef int (*ss_unzIteratorFunction2)(ss_unzFile file, ss_unz_file_info64 *pfile_info, char *filename,
     uint16_t filename_size, void *extrafield, uint16_t extrafield_size, char *comment,
     uint16_t comment_size);
 
@@ -173,8 +173,8 @@ ZEXPORT ss_unzFile ss_unzOpen2_64(const void *path, zlib_filefunc64_def *pzlib_f
 ZEXPORT int     ss_unzClose(ss_unzFile file);
         int     ss_unzClose_MZ(ss_unzFile file);
 
-ZEXPORT int     ss_unzGetGlobalInfo(ss_unzFile file, unz_global_info* pglobal_info32);
-ZEXPORT int     ss_unzGetGlobalInfo64(ss_unzFile file, unz_global_info64 *pglobal_info);
+ZEXPORT int     ss_unzGetGlobalInfo(ss_unzFile file, ss_unz_global_info* pglobal_info32);
+ZEXPORT int     ss_unzGetGlobalInfo64(ss_unzFile file, ss_unz_global_info64 *pglobal_info);
 ZEXPORT int     ss_unzGetGlobalComment(ss_unzFile file, char *comment, uint16_t comment_size);
 
 ZEXPORT int     ss_unzOpenCurrentFile(ss_unzFile file);
@@ -185,10 +185,10 @@ ZEXPORT int     ss_unzReadCurrentFile(ss_unzFile file, void *buf, uint32_t len);
 ZEXPORT int     ss_unzCloseCurrentFile(ss_unzFile file);
 
 
-ZEXPORT int     ss_unzGetCurrentFileInfo(ss_unzFile file, unz_file_info *pfile_info, char *filename,
+ZEXPORT int     ss_unzGetCurrentFileInfo(ss_unzFile file, ss_unz_file_info *pfile_info, char *filename,
     uint16_t filename_size, void *extrafield, uint16_t extrafield_size, char *comment,
     uint16_t comment_size);
-ZEXPORT int     ss_unzGetCurrentFileInfo64(ss_unzFile file, unz_file_info64 * pfile_info, char *filename,
+ZEXPORT int     ss_unzGetCurrentFileInfo64(ss_unzFile file, ss_unz_file_info64 * pfile_info, char *filename,
     uint16_t filename_size, void *extrafield, uint16_t extrafield_size, char *comment,
     uint16_t comment_size);
 
