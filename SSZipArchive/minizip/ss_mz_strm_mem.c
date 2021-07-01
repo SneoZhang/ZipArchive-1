@@ -17,9 +17,9 @@
 */
 
 
-#include "mz.h"
-#include "mz_strm.h"
-#include "mz_strm_mem.h"
+#include "ss_mz.h"
+#include "ss_mz_strm.h"
+#include "ss_mz_strm_mem.h"
 
 /***************************************************************************/
 

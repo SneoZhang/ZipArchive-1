@@ -9,10 +9,10 @@
 */
 
 
-#include "mz.h"
-#include "mz_os.h"
-#include "mz_strm.h"
-#include "mz_strm_split.h"
+#include "ss_mz.h"
+#include "ss_mz_os.h"
+#include "ss_mz_strm.h"
+#include "ss_mz_strm_split.h"
 
 #include <stdio.h> /* snprintf */
 

@@ -16,33 +16,33 @@
 */
 
 
-#include "mz.h"
-#include "mz_crypt.h"
-#include "mz_strm.h"
+#include "ss_mz.h"
+#include "ss_mz_crypt.h"
+#include "ss_mz_strm.h"
 #ifdef HAVE_BZIP2
-#  include "mz_strm_bzip.h"
+#  include "ss_mz_strm_bzip.h"
 #endif
 #ifdef HAVE_LIBCOMP
-#  include "mz_strm_libcomp.h"
+#  include "ss_mz_strm_libcomp.h"
 #endif
 #ifdef HAVE_LZMA
-#  include "mz_strm_lzma.h"
+#  include "ss_mz_strm_lzma.h"
 #endif
-#include "mz_strm_mem.h"
+#include "ss_mz_strm_mem.h"
 #ifdef HAVE_PKCRYPT
-#  include "mz_strm_pkcrypt.h"
+#  include "ss_mz_strm_pkcrypt.h"
 #endif
 #ifdef HAVE_WZAES
-#  include "mz_strm_wzaes.h"
+#  include "ss_mz_strm_wzaes.h"
 #endif
 #ifdef HAVE_ZLIB
-#  include "mz_strm_zlib.h"
+#  include "ss_mz_strm_zlib.h"
 #endif
 #ifdef HAVE_ZSTD
-#  include "mz_strm_zstd.h"
+#  include "ss_mz_strm_zstd.h"
 #endif
 
-#include "mz_zip.h"
+#include "ss_mz_zip.h"
 
 #include <ctype.h> /* tolower */
 #include <stdio.h> /* snprintf */
@@ -2016,7 +2016,7 @@ int32_t mz_zip_entry_read(void *handle, void *buf, int32_t len) {
     /* aes encryption validation will fail if compressed_size > 0 */
     read = mz_stream_read(zip->compress_stream, buf, len);
     if (read > 0)
-        zip->entry_crc32 = mz_crypt_crc32_update(zip->entry_crc32, buf, read);
+        zip->entry_crc32 = ss_mz_crypt_crc32_update(zip->entry_crc32, buf, read);
 
     mz_zip_print("Zip - Entry - Read - %" PRId32 " (max %" PRId32 ")\n", read, len);
 
@@ -2031,7 +2031,7 @@ int32_t mz_zip_entry_write(void *handle, const void *buf, int32_t len) {
         return MZ_PARAM_ERROR;
     written = mz_stream_write(zip->compress_stream, buf, len);
     if (written > 0)
-        zip->entry_crc32 = mz_crypt_crc32_update(zip->entry_crc32, buf, written);
+        zip->entry_crc32 = ss_mz_crypt_crc32_update(zip->entry_crc32, buf, written);
 
     mz_zip_print("Zip - Entry - Write - %" PRId32 " (max %" PRId32 ")\n", written, len);
 

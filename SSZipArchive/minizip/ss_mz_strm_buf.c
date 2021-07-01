@@ -10,9 +10,9 @@
    See the accompanying LICENSE file for the full text of the license.
 */
 
-#include "mz.h"
-#include "mz_strm.h"
-#include "mz_strm_buf.h"
+#include "ss_mz.h"
+#include "ss_mz_strm.h"
+#include "ss_mz_strm_buf.h"
 
 /***************************************************************************/
 

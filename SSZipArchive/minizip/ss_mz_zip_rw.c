@@ -8,18 +8,18 @@
    See the accompanying LICENSE file for the full text of the license.
 */
 
-#include "mz.h"
-#include "mz_crypt.h"
-#include "mz_os.h"
-#include "mz_strm.h"
-#include "mz_strm_buf.h"
-#include "mz_strm_mem.h"
-#include "mz_strm_os.h"
-#include "mz_strm_split.h"
-#include "mz_strm_wzaes.h"
-#include "mz_zip.h"
+#include "ss_mz.h"
+#include "ss_mz_crypt.h"
+#include "ss_mz_os.h"
+#include "ss_mz_strm.h"
+#include "ss_mz_strm_buf.h"
+#include "ss_mz_strm_mem.h"
+#include "ss_mz_strm_os.h"
+#include "ss_mz_strm_split.h"
+#include "ss_mz_strm_wzaes.h"
+#include "ss_mz_zip.h"
 
-#include "mz_zip_rw.h"
+#include "ss_mz_zip_rw.h"
 
 /***************************************************************************/
 
@@ -387,16 +387,16 @@ int32_t mz_zip_reader_entry_open(void *handle) {
         return err;
 
     if (mz_zip_reader_entry_get_first_hash(handle, &reader->hash_algorithm, &reader->hash_digest_size) == MZ_OK) {
-        mz_crypt_sha_create(&reader->hash);
+        ss_mz_crypt_sha_create(&reader->hash);
         if (reader->hash_algorithm == MZ_HASH_SHA1)
-            mz_crypt_sha_set_algorithm(reader->hash, MZ_HASH_SHA1);
+            ss_mz_crypt_sha_set_algorithm(reader->hash, MZ_HASH_SHA1);
         else if (reader->hash_algorithm == MZ_HASH_SHA256)
-            mz_crypt_sha_set_algorithm(reader->hash, MZ_HASH_SHA256);
+            ss_mz_crypt_sha_set_algorithm(reader->hash, MZ_HASH_SHA256);
         else
             err = MZ_SUPPORT_ERROR;
 
         if (err == MZ_OK)
-            mz_crypt_sha_begin(reader->hash);
+            ss_mz_crypt_sha_begin(reader->hash);
 #ifdef MZ_ZIP_SIGNING
         if (err == MZ_OK) {
             if (mz_zip_reader_entry_has_sign(handle) == MZ_OK) {
@@ -424,8 +424,8 @@ int32_t mz_zip_reader_entry_close(void *handle) {
     uint8_t expected_hash[MZ_HASH_MAX_SIZE];
 
     if (reader->hash != NULL) {
-        mz_crypt_sha_end(reader->hash, computed_hash, sizeof(computed_hash));
-        mz_crypt_sha_delete(&reader->hash);
+        ss_mz_crypt_sha_end(reader->hash, computed_hash, sizeof(computed_hash));
+        ss_mz_crypt_sha_delete(&reader->hash);
 
         err_hash = mz_zip_reader_entry_get_hash(handle, reader->hash_algorithm, expected_hash,
             reader->hash_digest_size);
@@ -450,7 +450,7 @@ int32_t mz_zip_reader_entry_read(void *handle, void *buf, int32_t len) {
     read = mz_zip_entry_read(reader->zip_handle, buf, len);
 #ifndef MZ_ZIP_NO_CRYPTO
     if ((read > 0) && (reader->hash != NULL))
-        mz_crypt_sha_update(reader->hash, buf, read);
+        ss_mz_crypt_sha_update(reader->hash, buf, read);
 #endif
     return read;
 }
@@ -497,7 +497,7 @@ int32_t mz_zip_reader_entry_sign_verify(void *handle) {
 
     if (err == MZ_OK) {
         /* Verify the pkcs signature */
-        err = mz_crypt_sign_verify(hash, reader->hash_digest_size, signature, signature_size);
+        err = ss_mz_crypt_sign_verify(hash, reader->hash_digest_size, signature, signature_size);
     }
 
     if (signature != NULL)
@@ -1290,9 +1290,9 @@ int32_t mz_zip_writer_entry_open(void *handle, mz_zip_file *file_info) {
 #ifndef MZ_ZIP_NO_CRYPTO
     if (mz_zip_attrib_is_dir(writer->file_info.external_fa, writer->file_info.version_madeby) != MZ_OK) {
         /* Start calculating sha256 */
-        mz_crypt_sha_create(&writer->sha256);
-        mz_crypt_sha_set_algorithm(writer->sha256, MZ_HASH_SHA256);
-        mz_crypt_sha_begin(writer->sha256);
+        ss_mz_crypt_sha_create(&writer->sha256);
+        ss_mz_crypt_sha_set_algorithm(writer->sha256, MZ_HASH_SHA256);
+        ss_mz_crypt_sha_begin(writer->sha256);
     }
 #endif
 
@@ -1318,7 +1318,7 @@ int32_t mz_zip_writer_entry_sign(void *handle, uint8_t *message, int32_t message
         return MZ_PARAM_ERROR;
 
     /* Sign message with certificate */
-    err = mz_crypt_sign(message, message_size, cert_data, cert_data_size, cert_pwd,
+    err = ss_mz_crypt_sign(message, message_size, cert_data, cert_data_size, cert_pwd,
         &signature, &signature_size);
 
     if ((err == MZ_OK) && (signature != NULL)) {
@@ -1349,8 +1349,8 @@ int32_t mz_zip_writer_entry_close(void *handle) {
 
 
     if (writer->sha256 != NULL) {
-        mz_crypt_sha_end(writer->sha256, sha256, sizeof(sha256));
-        mz_crypt_sha_delete(&writer->sha256);
+        ss_mz_crypt_sha_end(writer->sha256, sha256, sizeof(sha256));
+        ss_mz_crypt_sha_delete(&writer->sha256);
 
         /* Copy extrafield so we can append our own fields before close */
         mz_stream_mem_create(&writer->file_extra_stream);
@@ -1410,7 +1410,7 @@ int32_t mz_zip_writer_entry_write(void *handle, const void *buf, int32_t len) {
     written = mz_zip_entry_write(writer->zip_handle, buf, len);
 #ifndef MZ_ZIP_NO_CRYPTO
     if ((written > 0) && (writer->sha256 != NULL))
-        mz_crypt_sha_update(writer->sha256, buf, written);
+        ss_mz_crypt_sha_update(writer->sha256, buf, written);
 #endif
     return written;
 }

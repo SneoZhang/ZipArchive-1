@@ -9,9 +9,9 @@
 */
 
 
-#include "mz.h"
-#include "mz_os.h"
-#include "mz_crypt.h"
+#include "ss_mz.h"
+#include "ss_mz_os.h"
+#include "ss_mz_crypt.h"
 
 #if defined(HAVE_ZLIB)
 #  include "zlib.h"
@@ -42,12 +42,12 @@
 /***************************************************************************/
 
 #if defined(MZ_ZIP_NO_CRYPTO)
-int32_t mz_crypt_rand(uint8_t *buf, int32_t size) {
+int32_t ss_mz_crypt_rand(uint8_t *buf, int32_t size) {
     return mz_os_rand(buf, size);
 }
 #endif
 
-uint32_t mz_crypt_crc32_update(uint32_t value, const uint8_t *buf, int32_t size) {
+uint32_t ss_mz_crypt_crc32_update(uint32_t value, const uint8_t *buf, int32_t size) {
 #if defined(HAVE_ZLIB)
     return (uint32_t)ZLIB_PREFIX(crc32)((z_crc_t)value, buf, (uInt)size);
 #elif defined(HAVE_LZMA)
@@ -112,7 +112,7 @@ uint32_t mz_crypt_crc32_update(uint32_t value, const uint8_t *buf, int32_t size)
 }
 
 #if defined(HAVE_WZAES)
-int32_t  mz_crypt_pbkdf2(uint8_t *password, int32_t password_length, uint8_t *salt,
+int32_t  ss_mz_crypt_pbkdf2(uint8_t *password, int32_t password_length, uint8_t *salt,
     int32_t salt_length, int32_t iteration_count, uint8_t *key, int32_t key_length) {
     void *hmac1 = NULL;
     void *hmac2 = NULL;
@@ -130,26 +130,26 @@ int32_t  mz_crypt_pbkdf2(uint8_t *password, int32_t password_length, uint8_t *sa
 
     memset(key, 0, key_length);
 
-    mz_crypt_hmac_create(&hmac1);
-    mz_crypt_hmac_create(&hmac2);
-    mz_crypt_hmac_create(&hmac3);
+    ss_mz_crypt_hmac_create(&hmac1);
+    ss_mz_crypt_hmac_create(&hmac2);
+    ss_mz_crypt_hmac_create(&hmac3);
 
-    mz_crypt_hmac_set_algorithm(hmac1, MZ_HASH_SHA1);
-    mz_crypt_hmac_set_algorithm(hmac2, MZ_HASH_SHA1);
-    mz_crypt_hmac_set_algorithm(hmac3, MZ_HASH_SHA1);
+    ss_mz_crypt_hmac_set_algorithm(hmac1, MZ_HASH_SHA1);
+    ss_mz_crypt_hmac_set_algorithm(hmac2, MZ_HASH_SHA1);
+    ss_mz_crypt_hmac_set_algorithm(hmac3, MZ_HASH_SHA1);
 
-    err = mz_crypt_hmac_init(hmac1, password, password_length);
+    err = ss_mz_crypt_hmac_init(hmac1, password, password_length);
     if (err == MZ_OK)
-        err = mz_crypt_hmac_init(hmac2, password, password_length);
+        err = ss_mz_crypt_hmac_init(hmac2, password, password_length);
     if (err == MZ_OK)
-        err = mz_crypt_hmac_update(hmac2, salt, salt_length);
+        err = ss_mz_crypt_hmac_update(hmac2, salt, salt_length);
 
     block_count = 1 + ((uint16_t)key_length - 1) / MZ_HASH_SHA1_SIZE;
 
     for (i = 0; (err == MZ_OK) && (i < block_count); i += 1) {
         memset(ux, 0, sizeof(ux));
 
-        err = mz_crypt_hmac_copy(hmac2, hmac3);
+        err = ss_mz_crypt_hmac_copy(hmac2, hmac3);
         if (err != MZ_OK)
             break;
 
@@ -159,16 +159,16 @@ int32_t  mz_crypt_pbkdf2(uint8_t *password, int32_t password_length, uint8_t *sa
         uu[3] = (uint8_t)(i + 1);
 
         for (j = 0, k = 4; j < iteration_count; j += 1) {
-            err = mz_crypt_hmac_update(hmac3, uu, k);
+            err = ss_mz_crypt_hmac_update(hmac3, uu, k);
             if (err == MZ_OK)
-                err = mz_crypt_hmac_end(hmac3, uu, sizeof(uu));
+                err = ss_mz_crypt_hmac_end(hmac3, uu, sizeof(uu));
             if (err != MZ_OK)
                 break;
 
             for(k = 0; k < MZ_HASH_SHA1_SIZE; k += 1)
                 ux[k] ^= uu[k];
 
-            err = mz_crypt_hmac_copy(hmac1, hmac3);
+            err = ss_mz_crypt_hmac_copy(hmac1, hmac3);
             if (err != MZ_OK)
                 break;
         }
@@ -185,9 +185,9 @@ int32_t  mz_crypt_pbkdf2(uint8_t *password, int32_t password_length, uint8_t *sa
 
     /* hmac3 uses the same provider as hmac2, so it must be deleted
        before the context is destroyed. */
-    mz_crypt_hmac_delete(&hmac3);
-    mz_crypt_hmac_delete(&hmac1);
-    mz_crypt_hmac_delete(&hmac2);
+    ss_mz_crypt_hmac_delete(&hmac3);
+    ss_mz_crypt_hmac_delete(&hmac1);
+    ss_mz_crypt_hmac_delete(&hmac2);
 
     return err;
 }

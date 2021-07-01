@@ -6,9 +6,9 @@
 //
 
 #import "SSZipArchive.h"
-#include "minizip/mz_compat.h"
-#include "minizip/mz_zip.h"
-#include "minizip/mz_os.h"
+#include "minizip/ss_mz_compat.h"
+#include "minizip/ss_mz_zip.h"
+#include "minizip/ss_mz_os.h"
 #include <zlib.h>
 #include <sys/stat.h>
 
@@ -16,7 +16,7 @@ NSString *const SSZipArchiveErrorDomain = @"SSZipArchiveErrorDomain";
 
 #define CHUNK 16384
 
-int _zipOpenEntry(zipFile entry, NSString *name, const zip_fileinfo *zipfi, int level, NSString *password, BOOL aes);
+int _zipOpenEntry(ss_zipFile entry, NSString *name, const zip_fileinfo *zipfi, int level, NSString *password, BOOL aes);
 BOOL _fileIsSymbolicLink(const unz_file_info *fileInfo);
 
 #ifndef API_AVAILABLE
@@ -41,35 +41,35 @@ BOOL _fileIsSymbolicLink(const unz_file_info *fileInfo);
 {
     /// path for zip file
     NSString *_path;
-    zipFile _zip;
+    ss_zipFile _zip;
 }
 
 #pragma mark - Password check
 
 + (BOOL)isFilePasswordProtectedAtPath:(NSString *)path {
     // Begin opening
-    zipFile zip = unzOpen1(path.fileSystemRepresentation);
+    ss_zipFile zip = ss_unzOpen(path.fileSystemRepresentation);
     if (zip == NULL) {
         return NO;
     }
     
     BOOL passwordProtected = NO;
-    int ret = unzGoToFirstFile(zip);
+    int ret = ss_unzGoToFirstFile(zip);
     if (ret == UNZ_OK) {
         do {
-            ret = unzOpenCurrentFile(zip);
+            ret = ss_unzOpenCurrentFile(zip);
             if (ret != UNZ_OK) {
                 // attempting with an arbitrary password to workaround `unzOpenCurrentFile` limitation on AES encrypted files
-                ret = unzOpenCurrentFilePassword(zip, "");
-                unzCloseCurrentFile(zip);
+                ret = ss_unzOpenCurrentFilePassword(zip, "");
+                ss_unzCloseCurrentFile(zip);
                 if (ret == UNZ_OK || ret == MZ_PASSWORD_ERROR) {
                     passwordProtected = YES;
                 }
                 break;
             }
             unz_file_info fileInfo = {};
-            ret = unzGetCurrentFileInfo(zip, &fileInfo, NULL, 0, NULL, 0, NULL, 0);
-            unzCloseCurrentFile(zip);
+            ret = ss_unzGetCurrentFileInfo(zip, &fileInfo, NULL, 0, NULL, 0, NULL, 0);
+            ss_unzCloseCurrentFile(zip);
             if (ret != UNZ_OK) {
                 break;
             } else if ((fileInfo.flag & MZ_ZIP_FLAG_ENCRYPTED) == 1) {
@@ -77,11 +77,11 @@ BOOL _fileIsSymbolicLink(const unz_file_info *fileInfo);
                 break;
             }
             
-            ret = unzGoToNextFile(zip);
+            ret = ss_unzGoToNextFile(zip);
         } while (ret == UNZ_OK);
     }
     
-    unzClose(zip);
+    ss_unzClose(zip);
     return passwordProtected;
 }
 
@@ -90,7 +90,7 @@ BOOL _fileIsSymbolicLink(const unz_file_info *fileInfo);
         *error = nil;
     }
 
-    zipFile zip = unzOpen1(path.fileSystemRepresentation);
+    ss_zipFile zip = ss_unzOpen(path.fileSystemRepresentation);
     if (zip == NULL) {
         if (error) {
             *error = [NSError errorWithDomain:SSZipArchiveErrorDomain
@@ -102,13 +102,13 @@ BOOL _fileIsSymbolicLink(const unz_file_info *fileInfo);
 
     // Initialize passwordValid to YES (No password required)
     BOOL passwordValid = YES;
-    int ret = unzGoToFirstFile(zip);
+    int ret = ss_unzGoToFirstFile(zip);
     if (ret == UNZ_OK) {
         do {
             if (pw.length == 0) {
-                ret = unzOpenCurrentFile(zip);
+                ret = ss_unzOpenCurrentFile(zip);
             } else {
-                ret = unzOpenCurrentFilePassword(zip, [pw cStringUsingEncoding:NSUTF8StringEncoding]);
+                ret = ss_unzOpenCurrentFilePassword(zip, [pw cStringUsingEncoding:NSUTF8StringEncoding]);
             }
             if (ret != UNZ_OK) {
                 if (ret != MZ_PASSWORD_ERROR) {
@@ -122,7 +122,7 @@ BOOL _fileIsSymbolicLink(const unz_file_info *fileInfo);
                 break;
             }
             unz_file_info fileInfo = {};
-            ret = unzGetCurrentFileInfo(zip, &fileInfo, NULL, 0, NULL, 0, NULL, 0);
+            ret = ss_unzGetCurrentFileInfo(zip, &fileInfo, NULL, 0, NULL, 0, NULL, 0);
             if (ret != UNZ_OK) {
                 if (error) {
                     *error = [NSError errorWithDomain:SSZipArchiveErrorDomain
@@ -133,7 +133,7 @@ BOOL _fileIsSymbolicLink(const unz_file_info *fileInfo);
                 break;
             } else if ((fileInfo.flag & 1) == 1) {
                 unsigned char buffer[10] = {0};
-                int readBytes = unzReadCurrentFile(zip, buffer, (unsigned)MIN(10UL,fileInfo.uncompressed_size));
+                int readBytes = ss_unzReadCurrentFile(zip, buffer, (unsigned)MIN(10UL,fileInfo.uncompressed_size));
                 if (readBytes < 0) {
                     // Let's assume error Z_DATA_ERROR is caused by an invalid password
                     // Let's assume other errors are caused by Content Not Readable
@@ -151,12 +151,12 @@ BOOL _fileIsSymbolicLink(const unz_file_info *fileInfo);
                 break;
             }
             
-            unzCloseCurrentFile(zip);
-            ret = unzGoToNextFile(zip);
+            ss_unzCloseCurrentFile(zip);
+            ret = ss_unzGoToNextFile(zip);
         } while (ret == UNZ_OK);
     }
     
-    unzClose(zip);
+    ss_unzClose(zip);
     return passwordValid;
 }
 
@@ -165,7 +165,7 @@ BOOL _fileIsSymbolicLink(const unz_file_info *fileInfo);
         *error = nil;
     }
 
-    zipFile zip = unzOpen1(path.fileSystemRepresentation);
+    ss_zipFile zip = ss_unzOpen(path.fileSystemRepresentation);
     if (zip == NULL) {
         if (error) {
             *error = [NSError errorWithDomain:SSZipArchiveErrorDomain
@@ -176,10 +176,10 @@ BOOL _fileIsSymbolicLink(const unz_file_info *fileInfo);
     }
 
     unsigned long long totalSize = 0;
-    int ret = unzGoToFirstFile(zip);
+    int ret = ss_unzGoToFirstFile(zip);
     if (ret == UNZ_OK) {
         do {
-            ret = unzOpenCurrentFile(zip);
+            ret = ss_unzOpenCurrentFile(zip);
             if (ret != UNZ_OK) {
                 if (error) {
                     *error = [NSError errorWithDomain:SSZipArchiveErrorDomain
@@ -189,7 +189,7 @@ BOOL _fileIsSymbolicLink(const unz_file_info *fileInfo);
                 break;
             }
             unz_file_info fileInfo = {};
-            ret = unzGetCurrentFileInfo(zip, &fileInfo, NULL, 0, NULL, 0, NULL, 0);
+            ret = ss_unzGetCurrentFileInfo(zip, &fileInfo, NULL, 0, NULL, 0, NULL, 0);
             if (ret != UNZ_OK) {
                 if (error) {
                     *error = [NSError errorWithDomain:SSZipArchiveErrorDomain
@@ -201,12 +201,12 @@ BOOL _fileIsSymbolicLink(const unz_file_info *fileInfo);
 
             totalSize += fileInfo.uncompressed_size;
 
-            unzCloseCurrentFile(zip);
-            ret = unzGoToNextFile(zip);
+            ss_unzCloseCurrentFile(zip);
+            ret = ss_unzGoToNextFile(zip);
         } while (ret == UNZ_OK);
     }
 
-    unzClose(zip);
+    ss_unzClose(zip);
 
     return [NSNumber numberWithUnsignedLongLong:totalSize];
 }
@@ -308,7 +308,7 @@ BOOL _fileIsSymbolicLink(const unz_file_info *fileInfo);
     }
     
     // Begin opening
-    zipFile zip = unzOpen1(path.fileSystemRepresentation);
+    ss_zipFile zip = ss_unzOpen(path.fileSystemRepresentation);
     if (zip == NULL)
     {
         NSDictionary *userInfo = @{NSLocalizedDescriptionKey: @"failed to open zip file"};
@@ -329,11 +329,11 @@ BOOL _fileIsSymbolicLink(const unz_file_info *fileInfo);
     unsigned long long currentPosition = 0;
     
     unz_global_info globalInfo = {};
-    unzGetGlobalInfo(zip, &globalInfo);
+    ss_unzGetGlobalInfo(zip, &globalInfo);
     
     // Begin unzipping
     int ret = 0;
-    ret = unzGoToFirstFile(zip);
+    ret = ss_unzGoToFirstFile(zip);
     if (ret != UNZ_OK && ret != MZ_END_OF_LIST)
     {
         NSDictionary *userInfo = @{NSLocalizedDescriptionKey: @"failed to open first file in zip file"};
@@ -346,7 +346,7 @@ BOOL _fileIsSymbolicLink(const unz_file_info *fileInfo);
         {
             completionHandler(nil, NO, err);
         }
-        unzClose(zip);
+        ss_unzClose(zip);
         return NO;
     }
     
@@ -374,9 +374,9 @@ BOOL _fileIsSymbolicLink(const unz_file_info *fileInfo);
         }
         @autoreleasepool {
             if (password.length == 0) {
-                ret = unzOpenCurrentFile(zip);
+                ret = ss_unzOpenCurrentFile(zip);
             } else {
-                ret = unzOpenCurrentFilePassword(zip, [password cStringUsingEncoding:NSUTF8StringEncoding]);
+                ret = ss_unzOpenCurrentFilePassword(zip, [password cStringUsingEncoding:NSUTF8StringEncoding]);
             }
             
             if (ret != UNZ_OK) {
@@ -389,11 +389,11 @@ BOOL _fileIsSymbolicLink(const unz_file_info *fileInfo);
             unz_file_info fileInfo;
             memset(&fileInfo, 0, sizeof(unz_file_info));
             
-            ret = unzGetCurrentFileInfo(zip, &fileInfo, NULL, 0, NULL, 0, NULL, 0);
+            ret = ss_unzGetCurrentFileInfo(zip, &fileInfo, NULL, 0, NULL, 0, NULL, 0);
             if (ret != UNZ_OK) {
                 unzippingError = [NSError errorWithDomain:@"SSZipArchiveErrorDomain" code:SSZipArchiveErrorCodeFileInfoNotLoadable userInfo:@{NSLocalizedDescriptionKey: @"failed to retrieve info for file"}];
                 success = NO;
-                unzCloseCurrentFile(zip);
+                ss_unzCloseCurrentFile(zip);
                 break;
             }
             
@@ -425,7 +425,7 @@ BOOL _fileIsSymbolicLink(const unz_file_info *fileInfo);
                 break;
             }
             
-            unzGetCurrentFileInfo(zip, &fileInfo, filename, fileInfo.size_filename + 1, NULL, 0, NULL, 0);
+            ss_unzGetCurrentFileInfo(zip, &fileInfo, filename, fileInfo.size_filename + 1, NULL, 0, NULL, 0);
             filename[fileInfo.size_filename] = '\0';
             
             BOOL fileIsSymbolicLink = _fileIsSymbolicLink(&fileInfo);
@@ -436,8 +436,8 @@ BOOL _fileIsSymbolicLink(const unz_file_info *fileInfo);
                                                                      size:fileInfo.size_filename];
             if ([strPath hasPrefix:@"__MACOSX/"]) {
                 // ignoring resource forks: https://superuser.com/questions/104500/what-is-macosx-folder
-                unzCloseCurrentFile(zip);
-                ret = unzGoToNextFile(zip);
+                ss_unzCloseCurrentFile(zip);
+                ret = ss_unzGoToNextFile(zip);
                 free(filename);
                 continue;
             }
@@ -473,7 +473,7 @@ BOOL _fileIsSymbolicLink(const unz_file_info *fileInfo);
                 if ([err.domain isEqualToString:NSCocoaErrorDomain] &&
                     err.code == 640) {
                     unzippingError = err;
-                    unzCloseCurrentFile(zip);
+                    ss_unzCloseCurrentFile(zip);
                     success = NO;
                     break;
                 }
@@ -482,8 +482,8 @@ BOOL _fileIsSymbolicLink(const unz_file_info *fileInfo);
             
             if ([fileManager fileExistsAtPath:fullPath] && !isDirectory && !overwrite) {
                 //FIXME: couldBe CRC Check?
-                unzCloseCurrentFile(zip);
-                ret = unzGoToNextFile(zip);
+                ss_unzCloseCurrentFile(zip);
+                ret = ss_unzGoToNextFile(zip);
                 continue;
             }
             
@@ -491,7 +491,7 @@ BOOL _fileIsSymbolicLink(const unz_file_info *fileInfo);
                 // nothing to read/write for a directory
             } else if (!fileIsSymbolicLink) {
                 // ensure we are not creating stale file entries
-                int readBytes = unzReadCurrentFile(zip, buffer, 4096);
+                int readBytes = ss_unzReadCurrentFile(zip, buffer, 4096);
                 if (readBytes >= 0) {
                     FILE *fp = fopen(fullPath.fileSystemRepresentation, "wb");
                     while (fp) {
@@ -508,7 +508,7 @@ BOOL _fileIsSymbolicLink(const unz_file_info *fileInfo);
                         } else {
                             break;
                         }
-                        readBytes = unzReadCurrentFile(zip, buffer, 4096);
+                        readBytes = ss_unzReadCurrentFile(zip, buffer, 4096);
                         if (readBytes < 0) {
                             // Let's assume error Z_DATA_ERROR is caused by an invalid password
                             // Let's assume other errors are caused by Content Not Readable
@@ -604,7 +604,7 @@ BOOL _fileIsSymbolicLink(const unz_file_info *fileInfo);
                             unzippingError = [NSError errorWithDomain:NSPOSIXErrorDomain
                                                                  code:errnoSave
                                                              userInfo:nil];
-                            unzCloseCurrentFile(zip);
+                            ss_unzCloseCurrentFile(zip);
                             // Log the error
                             NSLog(@"[SSZipArchive] Failed to open file on unzipping.(%@)", unzippingError);
 
@@ -625,7 +625,7 @@ BOOL _fileIsSymbolicLink(const unz_file_info *fileInfo);
                 // Assemble the path for the symbolic link
                 NSMutableString *destinationPath = [NSMutableString string];
                 int bytesRead = 0;
-                while ((bytesRead = unzReadCurrentFile(zip, buffer, 4096)) > 0)
+                while ((bytesRead = ss_unzReadCurrentFile(zip, buffer, 4096)) > 0)
                 {
                     buffer[bytesRead] = 0;
                     [destinationPath appendString:@((const char *)buffer)];
@@ -668,13 +668,13 @@ BOOL _fileIsSymbolicLink(const unz_file_info *fileInfo);
                 }
             }
             
-            crc_ret = unzCloseCurrentFile(zip);
+            crc_ret = ss_unzCloseCurrentFile(zip);
             if (crc_ret == MZ_CRC_ERROR) {
                 // CRC ERROR
                 success = NO;
                 break;
             }
-            ret = unzGoToNextFile(zip);
+            ret = ss_unzGoToNextFile(zip);
             
             // Message delegate
             if ([delegate respondsToSelector:@selector(zipArchiveDidUnzipFileAtIndex:totalFiles:archivePath:fileInfo:)]) {
@@ -693,7 +693,7 @@ BOOL _fileIsSymbolicLink(const unz_file_info *fileInfo);
     } while (ret == UNZ_OK && success);
     
     // Close
-    unzClose(zip);
+    ss_unzClose(zip);
     
     // The process of decompressing the .zip archive causes the modification times on the folders
     // to be set to the present time. So, when we are done, they need to be explicitly set.
@@ -980,9 +980,9 @@ BOOL _fileIsSymbolicLink(const unz_file_info *fileInfo);
     }
 
     uint16_t version_madeby = 3 << 8;//UNIX
-    int error = zipOpenNewFileInZip5(_zip, fileName.fileSystemRepresentation, &zipInfo, NULL, 0, NULL, 0, NULL, Z_DEFLATED, compressionLevel, 0, -MAX_WBITS, DEF_MEM_LEVEL, Z_DEFAULT_STRATEGY, password.UTF8String, aes, version_madeby, 0, 0);
-    zipWriteInFileInZip(_zip, link_path, (uint32_t)strlen(link_path));
-    zipCloseFileInZip(_zip);
+    int error = ss_zipOpenNewFileInZip5(_zip, fileName.fileSystemRepresentation, &zipInfo, NULL, 0, NULL, 0, NULL, Z_DEFLATED, compressionLevel, 0, -MAX_WBITS, DEF_MEM_LEVEL, Z_DEFAULT_STRATEGY, password.UTF8String, aes, version_madeby, 0, 0);
+    ss_zipWriteInFileInZip(_zip, link_path, (uint32_t)strlen(link_path));
+    ss_zipCloseFileInZip(_zip);
     return error == ZIP_OK;
 }
 
@@ -1002,14 +1002,14 @@ BOOL _fileIsSymbolicLink(const unz_file_info *fileInfo);
 - (BOOL)open
 {
     NSAssert((_zip == NULL), @"Attempting to open an archive which is already open");
-    _zip = zipOpen(_path.fileSystemRepresentation, APPEND_STATUS_CREATE);
+    _zip = ss_zipOpen(_path.fileSystemRepresentation, APPEND_STATUS_CREATE);
     return (NULL != _zip);
 }
 
 - (BOOL)openForAppending
 {
     NSAssert((_zip == NULL), @"Attempting to open an archive which is already open");
-    _zip = zipOpen(_path.fileSystemRepresentation, APPEND_STATUS_ADDINZIP);
+    _zip = ss_zipOpen(_path.fileSystemRepresentation, APPEND_STATUS_ADDINZIP);
     return (NULL != _zip);
 }
 
@@ -1023,8 +1023,8 @@ BOOL _fileIsSymbolicLink(const unz_file_info *fileInfo);
     
     int error = _zipOpenEntry(_zip, [folderName stringByAppendingString:@"/"], &zipInfo, Z_NO_COMPRESSION, password, NO);
     const void *buffer = NULL;
-    zipWriteInFileInZip(_zip, buffer, 0);
-    zipCloseFileInZip(_zip);
+    ss_zipWriteInFileInZip(_zip, buffer, 0);
+    ss_zipCloseFileInZip(_zip);
     return error == ZIP_OK;
 }
 
@@ -1070,10 +1070,10 @@ BOOL _fileIsSymbolicLink(const unz_file_info *fileInfo);
     while (!feof(input) && !ferror(input))
     {
         unsigned int len = (unsigned int) fread(buffer, 1, CHUNK, input);
-        zipWriteInFileInZip(_zip, buffer, len);
+        ss_zipWriteInFileInZip(_zip, buffer, len);
     }
     
-    zipCloseFileInZip(_zip);
+    ss_zipCloseFileInZip(_zip);
     free(buffer);
     fclose(input);
     return error == ZIP_OK;
@@ -1097,16 +1097,16 @@ BOOL _fileIsSymbolicLink(const unz_file_info *fileInfo);
     
     int error = _zipOpenEntry(_zip, filename, &zipInfo, compressionLevel, password, aes);
     
-    zipWriteInFileInZip(_zip, data.bytes, (unsigned int)data.length);
+    ss_zipWriteInFileInZip(_zip, data.bytes, (unsigned int)data.length);
     
-    zipCloseFileInZip(_zip);
+    ss_zipCloseFileInZip(_zip);
     return error == ZIP_OK;
 }
 
 - (BOOL)close
 {
     NSAssert((_zip != NULL), @"[SSZipArchive] Attempting to close an archive which was never opened");
-    int error = zipClose(_zip, NULL);
+    int error = ss_zipClose(_zip, NULL);
     _zip = nil;
     return error == ZIP_OK;
 }
@@ -1279,13 +1279,13 @@ BOOL _fileIsSymbolicLink(const unz_file_info *fileInfo);
 
 @end
 
-int _zipOpenEntry(zipFile entry, NSString *name, const zip_fileinfo *zipfi, int level, NSString *password, BOOL aes)
+int _zipOpenEntry(ss_zipFile entry, NSString *name, const zip_fileinfo *zipfi, int level, NSString *password, BOOL aes)
 {
     // https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT
     uint16_t made_on_darwin = 19 << 8;
     //MZ_ZIP_FLAG_UTF8
     uint16_t flag_base = 1 << 11;
-    return zipOpenNewFileInZip5(entry, name.fileSystemRepresentation, zipfi, NULL, 0, NULL, 0, NULL, Z_DEFLATED, level, 0, -MAX_WBITS, DEF_MEM_LEVEL, Z_DEFAULT_STRATEGY, password.UTF8String, aes, made_on_darwin, flag_base, 1);
+    return ss_zipOpenNewFileInZip5(entry, name.fileSystemRepresentation, zipfi, NULL, 0, NULL, 0, NULL, Z_DEFLATED, level, 0, -MAX_WBITS, DEF_MEM_LEVEL, Z_DEFAULT_STRATEGY, password.UTF8String, aes, made_on_darwin, flag_base, 1);
 }
 
 #pragma mark - Private tools for file info

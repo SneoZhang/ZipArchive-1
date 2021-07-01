@@ -9,7 +9,7 @@
 */
 
 
-#include "mz.h"
+#include "ss_mz.h"
 
 #include <CoreFoundation/CoreFoundation.h>
 #include <CommonCrypto/CommonCryptor.h>
@@ -20,7 +20,7 @@
 
 /***************************************************************************/
 
-int32_t mz_crypt_rand(uint8_t *buf, int32_t size) {
+int32_t ss_mz_crypt_rand(uint8_t *buf, int32_t size) {
     if (SecRandomCopyBytes(kSecRandomDefault, size, buf) != errSecSuccess)
         return 0;
     return size;
@@ -28,7 +28,7 @@ int32_t mz_crypt_rand(uint8_t *buf, int32_t size) {
 
 /***************************************************************************/
 
-typedef struct mz_crypt_sha_s {
+typedef struct ss_mz_crypt_sha_s {
     CC_SHA1_CTX     ctx1;
     CC_SHA256_CTX   ctx256;
     int32_t         error;
@@ -38,20 +38,20 @@ typedef struct mz_crypt_sha_s {
 
 /***************************************************************************/
 
-void mz_crypt_sha_reset(void *handle) {
+void ss_mz_crypt_sha_reset(void *handle) {
     mz_crypt_sha *sha = (mz_crypt_sha *)handle;
 
     sha->error = 0;
     sha->initialized = 0;
 }
 
-int32_t mz_crypt_sha_begin(void *handle) {
+int32_t ss_mz_crypt_sha_begin(void *handle) {
     mz_crypt_sha *sha = (mz_crypt_sha *)handle;
 
     if (sha == NULL)
         return MZ_PARAM_ERROR;
 
-    mz_crypt_sha_reset(handle);
+    ss_mz_crypt_sha_reset(handle);
 
     if (sha->algorithm == MZ_HASH_SHA1)
         sha->error = CC_SHA1_Init(&sha->ctx1);
@@ -67,7 +67,7 @@ int32_t mz_crypt_sha_begin(void *handle) {
     return MZ_OK;
 }
 
-int32_t mz_crypt_sha_update(void *handle, const void *buf, int32_t size) {
+int32_t ss_mz_crypt_sha_update(void *handle, const void *buf, int32_t size) {
     mz_crypt_sha *sha = (mz_crypt_sha *)handle;
 
     if (sha == NULL || buf == NULL || !sha->initialized)
@@ -84,7 +84,7 @@ int32_t mz_crypt_sha_update(void *handle, const void *buf, int32_t size) {
     return size;
 }
 
-int32_t mz_crypt_sha_end(void *handle, uint8_t *digest, int32_t digest_size) {
+int32_t ss_mz_crypt_sha_end(void *handle, uint8_t *digest, int32_t digest_size) {
     mz_crypt_sha *sha = (mz_crypt_sha *)handle;
 
     if (sha == NULL || digest == NULL || !sha->initialized)
@@ -106,12 +106,12 @@ int32_t mz_crypt_sha_end(void *handle, uint8_t *digest, int32_t digest_size) {
     return MZ_OK;
 }
 
-void mz_crypt_sha_set_algorithm(void *handle, uint16_t algorithm) {
+void ss_mz_crypt_sha_set_algorithm(void *handle, uint16_t algorithm) {
     mz_crypt_sha *sha = (mz_crypt_sha *)handle;
     sha->algorithm = algorithm;
 }
 
-void *mz_crypt_sha_create(void **handle) {
+void *ss_mz_crypt_sha_create(void **handle) {
     mz_crypt_sha *sha = NULL;
 
     sha = (mz_crypt_sha *)MZ_ALLOC(sizeof(mz_crypt_sha));
@@ -125,13 +125,13 @@ void *mz_crypt_sha_create(void **handle) {
     return sha;
 }
 
-void mz_crypt_sha_delete(void **handle) {
+void ss_mz_crypt_sha_delete(void **handle) {
     mz_crypt_sha *sha = NULL;
     if (handle == NULL)
         return;
     sha = (mz_crypt_sha *)*handle;
     if (sha != NULL) {
-        mz_crypt_sha_reset(*handle);
+        ss_mz_crypt_sha_reset(*handle);
         MZ_FREE(sha);
     }
     *handle = NULL;
@@ -139,24 +139,24 @@ void mz_crypt_sha_delete(void **handle) {
 
 /***************************************************************************/
 
-typedef struct mz_crypt_aes_s {
+typedef struct ss_mz_crypt_aes_s {
     CCCryptorRef crypt;
     int32_t      mode;
     int32_t      error;
-} mz_crypt_aes;
+} ss_mz_crypt_aes;
 
 /***************************************************************************/
 
-void mz_crypt_aes_reset(void *handle) {
-    mz_crypt_aes *aes = (mz_crypt_aes *)handle;
+void ss_mz_crypt_aes_reset(void *handle) {
+    ss_mz_crypt_aes *aes = (ss_mz_crypt_aes *)handle;
 
     if (aes->crypt != NULL)
         CCCryptorRelease(aes->crypt);
     aes->crypt = NULL;
 }
 
-int32_t mz_crypt_aes_encrypt(void *handle, uint8_t *buf, int32_t size) {
-    mz_crypt_aes *aes = (mz_crypt_aes *)handle;
+int32_t ss_mz_crypt_aes_encrypt(void *handle, uint8_t *buf, int32_t size) {
+    ss_mz_crypt_aes *aes = (ss_mz_crypt_aes *)handle;
     size_t data_moved = 0;
 
     if (aes == NULL || buf == NULL)
@@ -172,8 +172,8 @@ int32_t mz_crypt_aes_encrypt(void *handle, uint8_t *buf, int32_t size) {
     return size;
 }
 
-int32_t mz_crypt_aes_decrypt(void *handle, uint8_t *buf, int32_t size) {
-    mz_crypt_aes *aes = (mz_crypt_aes *)handle;
+int32_t ss_mz_crypt_aes_decrypt(void *handle, uint8_t *buf, int32_t size) {
+    ss_mz_crypt_aes *aes = (ss_mz_crypt_aes *)handle;
     size_t data_moved = 0;
 
     if (aes == NULL || buf == NULL)
@@ -189,14 +189,14 @@ int32_t mz_crypt_aes_decrypt(void *handle, uint8_t *buf, int32_t size) {
     return size;
 }
 
-int32_t mz_crypt_aes_set_encrypt_key(void *handle, const void *key, int32_t key_length) {
-    mz_crypt_aes *aes = (mz_crypt_aes *)handle;
+int32_t ss_mz_crypt_aes_set_encrypt_key(void *handle, const void *key, int32_t key_length) {
+    ss_mz_crypt_aes *aes = (ss_mz_crypt_aes *)handle;
 
 
     if (aes == NULL || key == NULL || key_length == 0)
         return MZ_PARAM_ERROR;
 
-    mz_crypt_aes_reset(handle);
+    ss_mz_crypt_aes_reset(handle);
 
     aes->error = CCCryptorCreate(kCCEncrypt, kCCAlgorithmAES, kCCOptionECBMode,
         key, key_length, NULL, &aes->crypt);
@@ -207,14 +207,14 @@ int32_t mz_crypt_aes_set_encrypt_key(void *handle, const void *key, int32_t key_
     return MZ_OK;
 }
 
-int32_t mz_crypt_aes_set_decrypt_key(void *handle, const void *key, int32_t key_length) {
-    mz_crypt_aes *aes = (mz_crypt_aes *)handle;
+int32_t ss_mz_crypt_aes_set_decrypt_key(void *handle, const void *key, int32_t key_length) {
+    ss_mz_crypt_aes *aes = (ss_mz_crypt_aes *)handle;
 
 
     if (aes == NULL || key == NULL || key_length == 0)
         return MZ_PARAM_ERROR;
 
-    mz_crypt_aes_reset(handle);
+    ss_mz_crypt_aes_reset(handle);
 
     aes->error = CCCryptorCreate(kCCDecrypt, kCCAlgorithmAES, kCCOptionECBMode,
         key, key_length, NULL, &aes->crypt);
@@ -225,30 +225,30 @@ int32_t mz_crypt_aes_set_decrypt_key(void *handle, const void *key, int32_t key_
     return MZ_OK;
 }
 
-void mz_crypt_aes_set_mode(void *handle, int32_t mode) {
-    mz_crypt_aes *aes = (mz_crypt_aes *)handle;
+void ss_mz_crypt_aes_set_mode(void *handle, int32_t mode) {
+    ss_mz_crypt_aes *aes = (ss_mz_crypt_aes *)handle;
     aes->mode = mode;
 }
 
-void *mz_crypt_aes_create(void **handle) {
-    mz_crypt_aes *aes = NULL;
+void *ss_mz_crypt_aes_create(void **handle) {
+    ss_mz_crypt_aes *aes = NULL;
 
-    aes = (mz_crypt_aes *)MZ_ALLOC(sizeof(mz_crypt_aes));
+    aes = (ss_mz_crypt_aes *)MZ_ALLOC(sizeof(ss_mz_crypt_aes));
     if (aes != NULL)
-        memset(aes, 0, sizeof(mz_crypt_aes));
+        memset(aes, 0, sizeof(ss_mz_crypt_aes));
     if (handle != NULL)
         *handle = aes;
 
     return aes;
 }
 
-void mz_crypt_aes_delete(void **handle) {
-    mz_crypt_aes *aes = NULL;
+void ss_mz_crypt_aes_delete(void **handle) {
+    ss_mz_crypt_aes *aes = NULL;
     if (handle == NULL)
         return;
-    aes = (mz_crypt_aes *)*handle;
+    aes = (ss_mz_crypt_aes *)*handle;
     if (aes != NULL) {
-        mz_crypt_aes_reset(*handle);
+        ss_mz_crypt_aes_reset(*handle);
         MZ_FREE(aes);
     }
     *handle = NULL;
@@ -256,7 +256,7 @@ void mz_crypt_aes_delete(void **handle) {
 
 /***************************************************************************/
 
-typedef struct mz_crypt_hmac_s {
+typedef struct ss_mz_crypt_hmac_s {
     CCHmacContext   ctx;
     int32_t         initialized;
     int32_t         error;
@@ -265,25 +265,25 @@ typedef struct mz_crypt_hmac_s {
 
 /***************************************************************************/
 
-static void mz_crypt_hmac_free(void *handle) {
+static void ss_mz_crypt_hmac_free(void *handle) {
     mz_crypt_hmac *hmac = (mz_crypt_hmac *)handle;
     memset(&hmac->ctx, 0, sizeof(hmac->ctx));
 }
 
-void mz_crypt_hmac_reset(void *handle) {
+void ss_mz_crypt_hmac_reset(void *handle) {
     mz_crypt_hmac *hmac = (mz_crypt_hmac *)handle;
-    mz_crypt_hmac_free(handle);
+    ss_mz_crypt_hmac_free(handle);
     hmac->error = 0;
 }
 
-int32_t mz_crypt_hmac_init(void *handle, const void *key, int32_t key_length) {
+int32_t ss_mz_crypt_hmac_init(void *handle, const void *key, int32_t key_length) {
     mz_crypt_hmac *hmac = (mz_crypt_hmac *)handle;
     CCHmacAlgorithm algorithm = 0;
 
     if (hmac == NULL || key == NULL)
         return MZ_PARAM_ERROR;
 
-    mz_crypt_hmac_reset(handle);
+    ss_mz_crypt_hmac_reset(handle);
 
     if (hmac->algorithm == MZ_HASH_SHA1)
         algorithm = kCCHmacAlgSHA1;
@@ -296,7 +296,7 @@ int32_t mz_crypt_hmac_init(void *handle, const void *key, int32_t key_length) {
     return MZ_OK;
 }
 
-int32_t mz_crypt_hmac_update(void *handle, const void *buf, int32_t size) {
+int32_t ss_mz_crypt_hmac_update(void *handle, const void *buf, int32_t size) {
     mz_crypt_hmac *hmac = (mz_crypt_hmac *)handle;
 
     if (hmac == NULL || buf == NULL)
@@ -306,7 +306,7 @@ int32_t mz_crypt_hmac_update(void *handle, const void *buf, int32_t size) {
     return MZ_OK;
 }
 
-int32_t mz_crypt_hmac_end(void *handle, uint8_t *digest, int32_t digest_size) {
+int32_t ss_mz_crypt_hmac_end(void *handle, uint8_t *digest, int32_t digest_size) {
     mz_crypt_hmac *hmac = (mz_crypt_hmac *)handle;
 
     if (hmac == NULL || digest == NULL)
@@ -325,12 +325,12 @@ int32_t mz_crypt_hmac_end(void *handle, uint8_t *digest, int32_t digest_size) {
     return MZ_OK;
 }
 
-void mz_crypt_hmac_set_algorithm(void *handle, uint16_t algorithm) {
+void ss_mz_crypt_hmac_set_algorithm(void *handle, uint16_t algorithm) {
     mz_crypt_hmac *hmac = (mz_crypt_hmac *)handle;
     hmac->algorithm = algorithm;
 }
 
-int32_t mz_crypt_hmac_copy(void *src_handle, void *target_handle) {
+int32_t ss_mz_crypt_hmac_copy(void *src_handle, void *target_handle) {
     mz_crypt_hmac *source = (mz_crypt_hmac *)src_handle;
     mz_crypt_hmac *target = (mz_crypt_hmac *)target_handle;
 
@@ -341,7 +341,7 @@ int32_t mz_crypt_hmac_copy(void *src_handle, void *target_handle) {
     return MZ_OK;
 }
 
-void *mz_crypt_hmac_create(void **handle) {
+void *ss_mz_crypt_hmac_create(void **handle) {
     mz_crypt_hmac *hmac = NULL;
 
     hmac = (mz_crypt_hmac *)MZ_ALLOC(sizeof(mz_crypt_hmac));
@@ -355,13 +355,13 @@ void *mz_crypt_hmac_create(void **handle) {
     return hmac;
 }
 
-void mz_crypt_hmac_delete(void **handle) {
+void ss_mz_crypt_hmac_delete(void **handle) {
     mz_crypt_hmac *hmac = NULL;
     if (handle == NULL)
         return;
     hmac = (mz_crypt_hmac *)*handle;
     if (hmac != NULL) {
-        mz_crypt_hmac_free(*handle);
+        ss_mz_crypt_hmac_free(*handle);
         MZ_FREE(hmac);
     }
     *handle = NULL;
@@ -370,7 +370,7 @@ void mz_crypt_hmac_delete(void **handle) {
 /***************************************************************************/
 
 #if defined(MZ_ZIP_SIGNING)
-int32_t mz_crypt_sign(uint8_t *message, int32_t message_size, uint8_t *cert_data, int32_t cert_data_size,
+int32_t ss_mz_crypt_sign(uint8_t *message, int32_t message_size, uint8_t *cert_data, int32_t cert_data_size,
     const char *cert_pwd, uint8_t **signature, int32_t *signature_size) {
     CFStringRef password_ref = NULL;
     CFDictionaryRef options_dict = NULL;
@@ -433,7 +433,7 @@ int32_t mz_crypt_sign(uint8_t *message, int32_t message_size, uint8_t *cert_data
     return err;
 }
 
-int32_t mz_crypt_sign_verify(uint8_t *message, int32_t message_size, uint8_t *signature, int32_t signature_size) {
+int32_t ss_mz_crypt_sign_verify(uint8_t *message, int32_t message_size, uint8_t *signature, int32_t signature_size) {
     CMSDecoderRef decoder = NULL;
     CMSSignerStatus signer_status = 0;
     CFDataRef message_out = NULL;

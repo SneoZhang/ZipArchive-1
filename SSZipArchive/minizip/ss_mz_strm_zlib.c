@@ -9,9 +9,9 @@
 */
 
 
-#include "mz.h"
-#include "mz_strm.h"
-#include "mz_strm_zlib.h"
+#include "ss_mz.h"
+#include "ss_mz_strm.h"
+#include "ss_mz_strm_zlib.h"
 
 #include "zlib.h"
 #if defined(ZLIBNG_VERNUM) && !defined(ZLIB_COMPAT)

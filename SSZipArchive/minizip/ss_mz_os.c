@@ -10,11 +10,11 @@
    See the accompanying LICENSE file for the full text of the license.
 */
 
-#include "mz.h"
-#include "mz_crypt.h"
-#include "mz_os.h"
-#include "mz_strm.h"
-#include "mz_strm_os.h"
+#include "ss_mz.h"
+#include "ss_mz_crypt.h"
+#include "ss_mz_os.h"
+#include "ss_mz_strm.h"
+#include "ss_mz_strm_os.h"
 
 #include <ctype.h> /* tolower */
 
@@ -338,7 +338,7 @@ int32_t mz_file_get_crc(const char *path, uint32_t *result_crc) {
                 break;
             }
 
-            crc32 = mz_crypt_crc32_update(crc32, buf, read);
+            crc32 = ss_mz_crypt_crc32_update(crc32, buf, read);
         } while ((err == MZ_OK) && (read > 0));
 
         mz_stream_os_close(stream);

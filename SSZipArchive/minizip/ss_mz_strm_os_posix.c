@@ -14,9 +14,9 @@
 */
 
 
-#include "mz.h"
-#include "mz_strm.h"
-#include "mz_strm_os.h"
+#include "ss_mz.h"
+#include "ss_mz_strm.h"
+#include "ss_mz_strm_os.h"
 
 #include <stdio.h> /* fopen, fread.. */
 #include <errno.h>

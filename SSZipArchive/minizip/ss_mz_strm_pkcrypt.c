@@ -22,10 +22,10 @@
 */
 
 
-#include "mz.h"
-#include "mz_crypt.h"
-#include "mz_strm.h"
-#include "mz_strm_pkcrypt.h"
+#include "ss_mz.h"
+#include "ss_mz_crypt.h"
+#include "ss_mz_strm.h"
+#include "ss_mz_strm_pkcrypt.h"
 
 /***************************************************************************/
 
@@ -87,14 +87,14 @@ static uint8_t mz_stream_pkcrypt_update_keys(void *stream, uint8_t c) {
     mz_stream_pkcrypt *pkcrypt = (mz_stream_pkcrypt *)stream;
     uint8_t buf = c;
 
-    pkcrypt->keys[0] = (uint32_t)~mz_crypt_crc32_update(~pkcrypt->keys[0], &buf, 1);
+    pkcrypt->keys[0] = (uint32_t)~ss_mz_crypt_crc32_update(~pkcrypt->keys[0], &buf, 1);
 
     pkcrypt->keys[1] += pkcrypt->keys[0] & 0xff;
     pkcrypt->keys[1] *= 134775813L;
     pkcrypt->keys[1] += 1;
 
     buf = (uint8_t)(pkcrypt->keys[1] >> 24);
-    pkcrypt->keys[2] = (uint32_t)~mz_crypt_crc32_update(~pkcrypt->keys[2], &buf, 1);
+    pkcrypt->keys[2] = (uint32_t)~ss_mz_crypt_crc32_update(~pkcrypt->keys[2], &buf, 1);
 
     return (uint8_t)c;
 }
@@ -139,7 +139,7 @@ int32_t mz_stream_pkcrypt_open(void *stream, const char *path, int32_t mode) {
 
     if (mode & MZ_OPEN_MODE_WRITE) {
         /* First generate RAND_HEAD_LEN - 2 random bytes. */
-        mz_crypt_rand(header, MZ_PKCRYPT_HEADER_SIZE - 2);
+        ss_mz_crypt_rand(header, MZ_PKCRYPT_HEADER_SIZE - 2);
 
         /* Encrypt random header (last two bytes is high word of crc) */
         for (i = 0; i < MZ_PKCRYPT_HEADER_SIZE - 2; i++)
